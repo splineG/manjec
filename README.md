@@ -1,6 +1,6 @@
 # manjec
-simple windows manual map injector written in C
+* simple windows manual map injector written in C
 
-# usage
-if you somehow dont know how to compile this use this command
+# building
+you can build the source code using this command command
 ```gcc injector.c -o injector.exe```
