@@ -1,15 +1,41 @@
 #include <windows.h>
+#include <tlhelp32.h>
 #include <stdio.h>
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
-        printf("Usage: injector.exe <pid> <dll_path>\n");
+        printf("Usage: injector.exe <process_name> <dll_path>\n");
         return 1;
     }
 
-    // Get the target process ID and DLL path
-    DWORD pid = atoi(argv[1]);
+    // Get the target process name and DLL path
+    char* processName = argv[1];
     char* dllPath = argv[2];
+
+    // Get the process ID of the target process
+    DWORD pid = 0;
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot != INVALID_HANDLE_VALUE) {
+        PROCESSENTRY32 pe;
+        pe.dwSize = sizeof(PROCESSENTRY32);
+        if (Process32First(hSnapshot, &pe))
+        {
+            do
+            {
+                if (lstrcmp(pe.szExeFile, processName) == 0)
+                {
+                    pid = pe.th32ProcessID;
+                    break;
+                }
+            } while (Process32Next(hSnapshot, &pe));
+        }
+        CloseHandle(hSnapshot);
+    }
+
+    if (pid == 0) {
+        printf("Failed to find process with name '%s'\n", processName);
+        return 1;
+    }
 
     // Open the target process
     HANDLE hProcess = OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ, FALSE, pid);
